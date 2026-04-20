@@ -1,13 +1,376 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="寸进">
+<title>寸进 Inching</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --p:#5B4FCF;--pl:#EDE9FF;
+  --t:#1A1A2E;--t2:#6B6B80;--t3:#A0A0B0;
+  --bg:#FFFFFF;--bg2:#F8F7FF;--bd:#EEEEF5;
+  --st:env(safe-area-inset-top);--sb:env(safe-area-inset-bottom);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,'PingFang SC',sans-serif;color:var(--t);-webkit-font-smoothing:antialiased}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative}
 
+/* NAV */
+.nav{display:flex;justify-content:space-around;padding:10px 0 calc(10px + var(--sb));border-top:0.5px solid var(--bd);background:var(--bg);flex-shrink:0;z-index:10}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 20px;opacity:0.35;transition:opacity 0.2s}
+.ni.on{opacity:1}
+.ni svg{width:22px;height:22px;color:var(--t2)}
+.ni.on svg{color:var(--p)}
+.ni span{font-size:11px;font-weight:500;color:var(--t2)}
+.ni.on span{color:var(--p)}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.pg{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;opacity:0;pointer-events:none;transition:opacity 0.2s;padding-bottom:20px}
+.pg.on{opacity:1;pointer-events:all}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;padding:calc(16px + var(--st)) 22px 18px}
+.logo{font-size:13px;font-weight:600;color:var(--p);letter-spacing:0.06em;text-transform:uppercase}
+.logo-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.date-lbl{font-size:13px;color:var(--t2)}
+
+/* RECORD */
+.ri{padding:0 22px}
+.q{font-size:26px;font-weight:600;color:var(--t);margin-bottom:24px;line-height:1.3}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.tag{padding:9px 18px;border-radius:20px;border:1px solid var(--bd);font-size:14px;color:var(--t2);cursor:pointer;background:var(--bg);transition:all 0.15s;font-family:inherit}
+.tag:active{transform:scale(0.97)}
+.tag.sel{background:var(--p);color:#fff;border-color:var(--p)}
+.iw{position:relative;margin-bottom:28px}
+.inp{width:100%;border:0.5px solid var(--bd);border-radius:14px;padding:15px 16px 28px;font-size:16px;font-family:inherit;color:var(--t);outline:none;background:var(--bg);resize:none;line-height:1.6;min-height:100px;transition:border-color 0.2s}
+.inp:focus{border-color:var(--p)}
+.inp::placeholder{color:var(--t3)}
+.cc{position:absolute;bottom:10px;right:14px;font-size:11px;color:var(--t3)}
+.sbtn{width:100%;padding:16px;background:var(--p);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:500;font-family:inherit;cursor:pointer;transition:transform 0.1s,opacity 0.1s}
+.sbtn:active{transform:scale(0.98)}
+.sbtn:disabled{opacity:0.35;cursor:default}
+
+/* CONFIRM */
+.cf{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;opacity:0;pointer-events:none;transition:opacity 0.25s;padding:40px;text-align:center}
+.cf.on{opacity:1;pointer-events:all}
+.cf-lbl{font-size:16px;color:var(--t2);margin-bottom:20px}
+.cf-num{font-size:76px;font-weight:300;color:var(--p);line-height:1;letter-spacing:-3px;transform:scale(0);transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.cf.on .cf-num{transform:scale(1)}
+.cf-sub{font-size:15px;color:var(--t2);margin-top:6px;margin-bottom:8px}
+.cf-chip{display:inline-block;background:var(--pl);color:var(--p);padding:7px 20px;border-radius:20px;font-size:14px;font-weight:500;margin-bottom:36px}
+.again{font-size:14px;font-weight:500;color:var(--p);background:none;border:1px solid rgba(91,79,207,0.25);border-radius:20px;padding:10px 28px;cursor:pointer;font-family:inherit}
+.again:active{background:var(--pl)}
+.motto{position:absolute;bottom:calc(28px + var(--sb));font-size:10px;color:var(--t3);letter-spacing:0.15em;text-transform:uppercase}
+
+/* TRACKS */
+.ti{padding:0 22px}
+.ptabs{display:flex;gap:6px;margin-bottom:22px}
+.ptab{padding:6px 16px;border-radius:20px;border:0.5px solid var(--bd);font-size:13px;color:var(--t2);cursor:pointer;background:var(--bg);font-family:inherit;transition:all 0.15s}
+.ptab:active{transform:scale(0.97)}
+.ptab.sel{background:var(--p);color:#fff;border-color:var(--p)}
+.sec-t{font-size:12px;font-weight:500;color:var(--t3);letter-spacing:0.05em;margin-bottom:14px}
+.drow{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.dname{font-size:14px;color:var(--t);width:44px;flex-shrink:0}
+.dbg{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.dbar{height:100%;background:var(--p);border-radius:3px;transition:width 0.5s ease}
+.dcnt{font-size:13px;color:var(--t3);width:28px;text-align:right;flex-shrink:0}
+.insight{font-size:13px;color:var(--t2);background:var(--bg2);border-radius:12px;padding:12px 14px;margin:16px 0 24px;line-height:1.65}
+.tl-day{margin-bottom:18px}
+.tl-date{font-size:12px;color:var(--t3);margin-bottom:8px}
+.tl-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.tl-dot{width:7px;height:7px;border-radius:50%;background:var(--p);flex-shrink:0;margin-top:5px}
+.tl-dir{font-size:13px;font-weight:500;color:var(--p)}
+.tl-note{font-size:14px;color:var(--t);line-height:1.5;margin-top:1px}
+.empty{text-align:center;padding:48px 20px;color:var(--t3);font-size:14px;line-height:1.8}
+
+/* MY */
+.mi{padding:0 22px}
+.my-sec{margin-bottom:28px}
+.dir-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.dc{display:flex;align-items:center;gap:6px;padding:7px 13px;background:var(--bg2);border-radius:20px;font-size:14px;color:var(--t)}
+.ddel{font-size:18px;color:var(--t3);cursor:pointer;line-height:1;padding:0 2px}
+.ddel:active{color:#E24B4A}
+.add-row{display:flex;gap:8px}
+.add-inp{flex:1;border:0.5px solid var(--bd);border-radius:10px;padding:10px 14px;font-size:14px;font-family:inherit;color:var(--t);outline:none;background:var(--bg)}
+.add-inp:focus{border-color:var(--p)}
+.add-btn{padding:10px 18px;background:var(--p);color:#fff;border:none;border-radius:10px;font-size:14px;font-family:inherit;cursor:pointer}
+.add-btn:active{opacity:0.85}
+.about{font-size:13px;color:var(--t3);line-height:1.8;text-align:center;padding:24px 0;border-top:0.5px solid var(--bd)}
+.about strong{color:var(--t2);font-weight:500}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="pages">
+
+    <!-- RECORD PAGE -->
+    <div class="pg on" id="pg-rec">
+      <div class="hd">
+        <div>
+          <div class="logo">寸进 Inching</div>
+          <div class="logo-sub">inch by inch</div>
+        </div>
+        <div class="date-lbl" id="date-lbl"></div>
+      </div>
+      <div class="ri">
+        <div class="q">今天做了什么？</div>
+        <div class="tags" id="tags"></div>
+        <div class="iw">
+          <textarea class="inp" id="inp" placeholder="写一句话就够" maxlength="60" rows="3" oninput="ucc()"></textarea>
+          <div class="cc" id="cc">0/60</div>
+        </div>
+        <button class="sbtn" id="sbtn" onclick="doSave()" disabled>记下来</button>
+      </div>
+    </div>
+
+    <!-- TRACKS PAGE -->
+    <div class="pg" id="pg-tr">
+      <div class="hd"><div class="logo">轨迹</div></div>
+      <div class="ti">
+        <div class="ptabs">
+          <button class="ptab sel" data-p="30" onclick="setPeriod(this)">本月</button>
+          <button class="ptab" data-p="90" onclick="setPeriod(this)">3个月</button>
+          <button class="ptab" data-p="0" onclick="setPeriod(this)">全部</button>
+        </div>
+        <div class="sec-t">投入分布</div>
+        <div id="dist"></div>
+        <div id="insight"></div>
+        <div class="sec-t">时间线</div>
+        <div id="tl"></div>
+      </div>
+    </div>
+
+    <!-- MY PAGE -->
+    <div class="pg" id="pg-my">
+      <div class="hd"><div class="logo">我的</div></div>
+      <div class="mi">
+        <div class="my-sec">
+          <div class="sec-t">方向管理</div>
+          <div class="dir-chips" id="dir-chips"></div>
+          <div class="add-row">
+            <input class="add-inp" id="new-dir" placeholder="添加方向（最多8个）" maxlength="8">
+            <button class="add-btn" onclick="addDir()">添加</button>
+          </div>
+        </div>
+        <div class="about">
+          <strong>寸进 Inching</strong><br>
+          记下你做了什么<br>看见自己走了多远
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <div class="ni on" onclick="go('rec',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>记录</span>
+    </div>
+    <div class="ni" onclick="go('tr',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-5h6v5"/></svg>
+      <span>轨迹</span>
+    </div>
+    <div class="ni" onclick="go('my',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>我的</span>
+    </div>
+  </nav>
+
+  <!-- CONFIRM OVERLAY -->
+  <div class="cf" id="cf">
+    <div class="cf-lbl">记下来了。</div>
+    <div class="cf-num" id="cf-num">1</div>
+    <div class="cf-sub">次推进</div>
+    <div class="cf-chip" id="cf-chip"></div>
+    <button class="again" onclick="hideCf()">再记一条 →</button>
+    <div class="motto">Inch by inch, your growth is visible.</div>
+  </div>
+</div>
+
+<script>
+const DAYS = ['日','一','二','三','四','五','六'];
+const DEF_DIRS = ['英语','剪辑','文案','营销','传播','产品'];
+
+let S = {
+  dirs: JSON.parse(localStorage.getItem('in_dirs') || 'null') || [...DEF_DIRS],
+  logs: JSON.parse(localStorage.getItem('in_logs') || '[]'),
+  sel: null,
+  period: 30
+};
+
+function sv() {
+  localStorage.setItem('in_dirs', JSON.stringify(S.dirs));
+  localStorage.setItem('in_logs', JSON.stringify(S.logs));
+}
+
+function dk(d) { return d.toISOString().split('T')[0]; }
+
+// init date
+function initDate() {
+  const d = new Date();
+  document.getElementById('date-lbl').textContent =
+    `${d.getMonth()+1}月${d.getDate()}日 周${DAYS[d.getDay()]}`;
+}
+
+// tags
+function renderTags() {
+  document.getElementById('tags').innerHTML = S.dirs.map(d =>
+    `<button class="tag${S.sel===d?' sel':''}" onclick="selTag('${d}')">${d}</button>`
+  ).join('');
+}
+
+function selTag(d) {
+  S.sel = S.sel === d ? null : d;
+  renderTags();
+  document.getElementById('sbtn').disabled = !S.sel;
+}
+
+function ucc() {
+  const v = document.getElementById('inp').value;
+  document.getElementById('cc').textContent = `${v.length}/60`;
+}
+
+// save
+function doSave() {
+  if (!S.sel) return;
+  const note = document.getElementById('inp').value.trim();
+  const cnt = S.logs.filter(l => l.dir === S.sel).length + 1;
+  S.logs.push({ dir: S.sel, note, date: dk(new Date()), ts: Date.now() });
+  sv();
+
+  document.getElementById('cf-num').textContent = cnt;
+  document.getElementById('cf-chip').textContent = S.sel;
+  document.getElementById('cf').classList.add('on');
+
+  document.getElementById('inp').value = '';
+  document.getElementById('cc').textContent = '0/60';
+
+  setTimeout(() => {
+    if (document.getElementById('cf').classList.contains('on')) hideCf();
+  }, 2200);
+}
+
+function hideCf() {
+  document.getElementById('cf').classList.remove('on');
+  S.sel = null;
+  renderTags();
+  document.getElementById('sbtn').disabled = true;
+}
+
+// tracks
+function setPeriod(btn) {
+  document.querySelectorAll('.ptab').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  S.period = parseInt(btn.dataset.p);
+  renderTracks();
+}
+
+function renderTracks() {
+  const now = new Date();
+  const cutoff = S.period ? new Date(now - S.period * 86400000) : new Date(0);
+  const logs = S.logs.filter(l => new Date(l.date) >= cutoff);
+
+  // dist
+  const cnt = {};
+  S.dirs.forEach(d => cnt[d] = 0);
+  logs.forEach(l => { if (cnt[l.dir] !== undefined) cnt[l.dir]++; });
+  const max = Math.max(...Object.values(cnt), 1);
+
+  document.getElementById('dist').innerHTML = S.dirs
+    .map(d => `<div class="drow">
+      <div class="dname">${d}</div>
+      <div class="dbg"><div class="dbar" style="width:${cnt[d]/max*100}%"></div></div>
+      <div class="dcnt">${cnt[d]}</div>
+    </div>`).join('');
+
+  // insight
+  const active = S.dirs.filter(d => cnt[d] > 0).sort((a,b) => cnt[b]-cnt[a]);
+  const ib = document.getElementById('insight');
+  if (active.length >= 1) {
+    const top = active[0];
+    const low = active.length > 1 ? active[active.length-1] : null;
+    ib.innerHTML = `<div class="insight">你在 <strong style="color:var(--p)">${top}</strong> 上投入最多${low ? ` · <strong>${low}</strong> 最近较少推进` : ''}</div>`;
+  } else {
+    ib.innerHTML = '';
+  }
+
+  // timeline
+  const byDate = {};
+  logs.forEach(l => {
+    if (!byDate[l.date]) byDate[l.date] = [];
+    byDate[l.date].push(l);
+  });
+  const dates = Object.keys(byDate).sort().reverse();
+  const tl = document.getElementById('tl');
+
+  if (!dates.length) {
+    tl.innerHTML = '<div class="empty">还没有记录<br>去记录页写下今天做了什么吧</div>';
+    return;
+  }
+
+  tl.innerHTML = dates.map(dt => {
+    const d = new Date(dt);
+    const label = `${d.getMonth()+1}月${d.getDate()}日 周${DAYS[d.getDay()]}`;
+    const items = byDate[dt].map(l => `
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div>
+          <div class="tl-dir">${l.dir}</div>
+          ${l.note ? `<div class="tl-note">${l.note}</div>` : ''}
+        </div>
+      </div>`).join('');
+    return `<div class="tl-day"><div class="tl-date">${label}</div>${items}</div>`;
+  }).join('');
+}
+
+// my
+function renderDirs() {
+  document.getElementById('dir-chips').innerHTML = S.dirs.map(d =>
+    `<div class="dc">
+      <span>${d}</span>
+      <span class="ddel" onclick="delDir('${d}')">×</span>
+    </div>`
+  ).join('');
+}
+
+function delDir(d) {
+  if (S.dirs.length <= 1) { alert('至少保留一个方向'); return; }
+  if (!confirm(`删除「${d}」？历史记录会保留。`)) return;
+  S.dirs = S.dirs.filter(x => x !== d);
+  if (S.sel === d) S.sel = null;
+  sv(); renderDirs(); renderTags();
+}
+
+function addDir() {
+  const inp = document.getElementById('new-dir');
+  const v = inp.value.trim();
+  if (!v) return;
+  if (S.dirs.includes(v)) { alert('已经有这个方向了'); return; }
+  if (S.dirs.length >= 8) { alert('最多8个方向'); return; }
+  S.dirs.push(v); inp.value = '';
+  sv(); renderDirs(); renderTags();
+}
+
+document.getElementById('new-dir').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addDir();
+});
+
+// nav
+function go(name, el) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  document.getElementById('pg-' + name).classList.add('on');
+  el.classList.add('on');
+  if (name === 'tr') renderTracks();
+  if (name === 'my') renderDirs();
+}
+
+// boot
+initDate();
+renderTags();
+</script>
+</body>
+</html>
